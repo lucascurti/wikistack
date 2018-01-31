@@ -4,10 +4,10 @@ const userRouter = require('./user');
 const wikiRouter = require('./wiki');
 
 router.use('/wiki', wikiRouter);
-router.use('/user', userRouter);
+router.use('/users', userRouter);
 
 router.get('/', (req, res) => {
-  return res.render('index.html');
+  return res.redirect('/wiki');
 });
 
 module.exports = router;

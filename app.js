@@ -28,6 +28,6 @@ app.use('/', router);
 
 // Start server
 models.db
-  .sync({ force: true })
+  .sync({ force: false })
   .then(() => app.listen(3000, () => console.log('Server started')))
   .catch(console.error);
