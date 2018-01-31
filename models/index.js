@@ -2,6 +2,7 @@ const Sequelize = require('sequelize');
 const db = new Sequelize('postgres://localhost:5432/wikistack', {
   logging: false,
 });
+const marked = require('marked');
 
 const Page = db.define(
   'page',
@@ -52,6 +53,10 @@ Page.findByTag = function(tagsArray) {
   });
 };
 const Op = Sequelize.Op;
+
+Page.prototype.renderedContent = function() {
+  return marked(this.content || '');
+};
 
 Page.prototype.findSimilar = function() {
   console.log('entra');
