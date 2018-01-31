@@ -68,6 +68,15 @@ wikiRouter.get('/add', (req, res, next) => {
   return res.render('addpage');
 });
 
+wikiRouter.get('/:urlTitle/delete/:pageId', (req, res, next) => {
+  Page.destroy({
+    where: {
+      urlTitle: req.params.urlTitle,
+      id: req.params.pageId,
+    },
+  }).then(answer => res.redirect('/'));
+});
+
 wikiRouter.get('/:urlTitle', (req, res, next) => {
   const pageFind = Page.findOne({
     where: {
