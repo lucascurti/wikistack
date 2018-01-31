@@ -8,13 +8,13 @@ const User = models.User;
 userRouter.get('/:userId', (req, res, next) => {
   const userFind = User.findOne({
     where: {
-      id: req.params.userId
-    }
+      id: req.params.userId,
+    },
   });
   const pagesFind = Page.findAll({
     where: {
-      authorId: req.params.userId
-    }
+      authorId: req.params.userId,
+    },
   });
 
   Promise.all([userFind, pagesFind])

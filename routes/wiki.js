@@ -6,7 +6,6 @@ const Page = models.Page;
 const User = models.User;
 
 wikiRouter.get('/', (req, res, next) => {
-  console.log(req.query);
   if (req.query.tags) {
     const tagsArray = req.query.tags.split(' ');
     Page.findByTag(tagsArray)
@@ -27,7 +26,7 @@ wikiRouter.get('/similar/:pageId', (req, res, next) => {
   })
     .then(page => {
       if (!page) {
-        res.status(404).send();
+        return res.status(404).send();
       } else {
         return page.findSimilar();
       }
@@ -46,26 +45,57 @@ wikiRouter.post('/', (req, res, next) => {
       name: req.body.name,
       email: req.body.email,
     },
-  }).then(values => {
-    const user = values[0];
-    const page = Page.build({
-      title,
-      content: req.body.content,
-      urlTitle,
-      tags: tagsArray,
-    });
-    page
-      .save()
-      .then(newPage => {
-        return newPage.setAuthor(user);
-      })
-      .then(page => res.redirect(page.urlTitle))
-      .catch(next);
-  });
+  })
+    .then(values => {
+      const user = values[0];
+      // Update
+      if (req.body.pageId) {
+        Page.update(
+          {
+            title: req.body.title,
+            tags: tagsArray,
+            content: req.body.content,
+            status: req.body.status,
+            authorId: user.id,
+          },
+          {
+            where: {
+              id: req.body.pageId,
+            },
+            returning: true,
+          },
+        ).then(data => {
+          const updatedPage = data[1][0];
+          res.redirect(updatedPage.urlTitle);
+        });
+      } else {
+        // Insert
+        const page = Page.build({
+          title,
+          content: req.body.content,
+          urlTitle,
+          tags: tagsArray,
+        });
+        page
+          .save()
+          .then(newPage => {
+            return newPage.setAuthor(user);
+          })
+          .then(page => res.redirect(page.urlTitle));
+      }
+    })
+
+    .catch(next);
 });
 
 wikiRouter.get('/add', (req, res, next) => {
-  return res.render('addpage');
+  const page = {
+    title: '',
+    urlTitle: '',
+    content: '',
+    tags: [],
+  };
+  return res.render('addpage', { page });
 });
 
 wikiRouter.get('/:urlTitle/delete/:pageId', (req, res, next) => {
@@ -75,6 +105,16 @@ wikiRouter.get('/:urlTitle/delete/:pageId', (req, res, next) => {
       id: req.params.pageId,
     },
   }).then(answer => res.redirect('/'));
+});
+
+wikiRouter.get('/:urlTitle/edit/:pageId', (req, res, next) => {
+  Page.findOne({
+    where: {
+      urlTitle: req.params.urlTitle,
+      id: req.params.pageId,
+    },
+    include: [{ model: User, as: 'author' }],
+  }).then(page => res.render('addpage', { page }));
 });
 
 wikiRouter.get('/:urlTitle', (req, res, next) => {
